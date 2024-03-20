@@ -79,14 +79,15 @@ const HospitalPage = () => {
               <TableCell>
                 {state.calculatedYesterdayWaitTimes[idx] &&
                 state.calculatedYesterdayWaitTimes[idx][1]
-                  ? t(state.calculatedYesterdayWaitTimes[idx][1])
+                  ? // @ts-ignore
+                    t(state.calculatedYesterdayWaitTimes[idx][1])
                   : t("Still waiting")}
               </TableCell>
-              {/* @ts-ignore */}
               <TableCell>
                 {state.calculatedLastWeekWaitTimes[idx] &&
                 state.calculatedLastWeekWaitTimes[idx][1]
-                  ? t(state.calculatedLastWeekWaitTimes[idx][1])
+                  ? // @ts-ignore
+                    t(state.calculatedLastWeekWaitTimes[idx][1])
                   : t("Still waiting")}
               </TableCell>
             </TableRow>
