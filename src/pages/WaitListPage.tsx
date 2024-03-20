@@ -6,54 +6,108 @@ import {
   TableCell,
   TableBody,
   TableRow,
+  CircularProgress,
 } from "@mui/material";
-import { AVAILABLE_HOSPITALS, DayTimePoint, Hospital } from "ane-hk";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { AVAILABLE_HOSPITALS, Hospital } from "ane-hk";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AppContext from "../AppContext";
 import { useNavigate } from "react-router-dom";
+import { WaitMsg } from "ane-hk/dist/types";
+import { format } from "date-fns";
 
 interface WaitListPageState {
-  isLoading: boolean;
-  waitTime: Record<string, Partial<Record<DayTimePoint, string>>>;
+  calculatedWaitTime: Record<string, string>;
+  calculatedYesterdayWaitTime: Record<string, WaitMsg | undefined>;
+  calculatedLastWeekWaitTime: Record<string, WaitMsg | undefined>;
+  isLoadingWaitTime: boolean;
+  isLoadingYesterdayWaitTime: boolean;
+  isLoadingLastWeekWaitTime: boolean;
+  lastUpdateTime: Date | null;
 }
 
 const WaitListPage = () => {
   const [state, setState] = useState<WaitListPageState>(DEFAULT_STATE);
-  const { aneHk } = useContext(AppContext);
+  const { getCalculatedWaitTime } = useContext(AppContext);
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
-  const crawl = useCallback(() => {
-    const curDate = new Date();
-    curDate.setMinutes(curDate.getMinutes() - 10);
-    Promise.all(
+  const crawl = useCallback(async () => {
+    const today = new Date();
+    const yesterday = new Date();
+    const lastWeek = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    await Promise.all(
       AVAILABLE_HOSPITALS.en.map((hosp) =>
-        aneHk
-          .getLatestWaitingTime(hosp as Hospital)
-          .then(
-            (r) => [hosp, r] as [string, Partial<Record<DayTimePoint, string>>],
-          )
-          .catch(
-            () => [hosp, {}] as [string, Partial<Record<DayTimePoint, string>>],
+        getCalculatedWaitTime(today, hosp as Hospital).then((tr) => ({
+          hosp,
+          res: format(
+            new Date(tr.filter(([_, v]) => v !== undefined)[0][0]),
+            "hh:mm a",
           ),
+        })),
       ),
     ).then((res) => {
-      setState({
-        isLoading: false,
-        waitTime: res.reduce(
-          (acc, [hosp, ret]) => {
-            acc[hosp as string] = ret;
+      setState((prev) => ({
+        ...prev,
+        calculatedWaitTime: res.reduce(
+          (acc, { hosp, res }) => {
+            acc[hosp] = res;
             return acc;
           },
-          {} as Record<string, Partial<Record<DayTimePoint, string>>>,
+          {} as WaitListPageState["calculatedWaitTime"],
         ),
-      });
+        lastUpdateTime: new Date(res[0].res[0][0][0]),
+        isLoadingWaitTime: false,
+      }));
+    });
+
+    await Promise.all(
+      AVAILABLE_HOSPITALS.en.map((hosp) =>
+        getCalculatedWaitTime(yesterday, hosp as Hospital).then((yr) => ({
+          hosp,
+          res: yr[0][1],
+        })),
+      ),
+    ).then((res) => {
+      setState((prev) => ({
+        ...prev,
+        calculatedYesterdayWaitTime: res.reduce(
+          (acc, { hosp, res }) => {
+            acc[hosp] = res;
+            return acc;
+          },
+          {} as WaitListPageState["calculatedYesterdayWaitTime"],
+        ),
+        isLoadingYesterdayWaitTime: false,
+      }));
+    });
+
+    await Promise.all(
+      AVAILABLE_HOSPITALS.en.map((hosp) =>
+        getCalculatedWaitTime(lastWeek, hosp as Hospital).then((yr) => ({
+          hosp,
+          res: yr[0][1],
+        })),
+      ),
+    ).then((res) => {
+      setState((prev) => ({
+        ...prev,
+        calculatedLastWeekWaitTime: res.reduce(
+          (acc, { hosp, res }) => {
+            acc[hosp] = res;
+            return acc;
+          },
+          {} as WaitListPageState["calculatedLastWeekWaitTime"],
+        ),
+        isLoadingLastWeekWaitTime: false,
+      }));
     });
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(crawl, 60000);
+    const timer = setInterval(crawl, 300000);
     crawl();
     return () => {
       clearInterval(timer);
@@ -67,14 +121,6 @@ const WaitListPage = () => {
     [i18n.language, navigate],
   );
 
-  const lastUpdateTime = useMemo<string>(() => {
-    const entries = Object.entries(state.waitTime);
-    if (entries.length) {
-      return Object.keys(entries[0][1]).slice(-1)[0];
-    }
-    return "";
-  }, [state]);
-
   return (
     <Box
       flex={1}
@@ -83,18 +129,29 @@ const WaitListPage = () => {
       flexDirection="column"
       alignItems="flex-end"
     >
-      <Typography variant="caption">
-        {t("Last updated time: ")} {lastUpdateTime}
-      </Typography>
+      {state.lastUpdateTime && (
+        <Typography variant="caption">
+          {t("Last updated time: ")} {format(state.lastUpdateTime, "hh:mm a")}
+        </Typography>
+      )}
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>{t("Hospital")}</TableCell>
-            <TableCell>{t("Waiting time reference")}</TableCell>
+            <TableCell rowSpan={2}>{t("Hospital")}</TableCell>
+            <TableCell rowSpan={2}>
+              {t("Arrival time of the current head")}
+            </TableCell>
+            <TableCell colSpan={2} sx={{ textAlign: "center" }}>
+              {t("Real waiting time")}
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>{t("Current time yesterday")}</TableCell>
+            <TableCell>{t("Current time last week")}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {Object.entries(state.waitTime).map(([hospName, topWait]) => (
+          {AVAILABLE_HOSPITALS.en.map((hospName) => (
             <TableRow key={hospName}>
               <TableCell>
                 <Box
@@ -104,7 +161,27 @@ const WaitListPage = () => {
                   {t(hospName)}
                 </Box>
               </TableCell>
-              <TableCell>{t(Object.values(topWait).slice(-1)[0])}</TableCell>
+              <TableCell>
+                {state.isLoadingWaitTime ? (
+                  <CircularProgress size="12px" />
+                ) : (
+                  state.calculatedWaitTime[hospName]
+                )}
+              </TableCell>
+              <TableCell>
+                {state.isLoadingYesterdayWaitTime ? (
+                  <CircularProgress size="12px" />
+                ) : (
+                  t(state.calculatedYesterdayWaitTime[hospName] ?? "No data")
+                )}
+              </TableCell>
+              <TableCell>
+                {state.isLoadingLastWeekWaitTime ? (
+                  <CircularProgress size="12px" />
+                ) : (
+                  t(state.calculatedLastWeekWaitTime[hospName] ?? "No data")
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -116,6 +193,11 @@ const WaitListPage = () => {
 export default WaitListPage;
 
 const DEFAULT_STATE: WaitListPageState = {
-  isLoading: true,
-  waitTime: {},
+  calculatedWaitTime: {},
+  calculatedYesterdayWaitTime: {},
+  calculatedLastWeekWaitTime: {},
+  isLoadingWaitTime: true,
+  isLoadingYesterdayWaitTime: true,
+  isLoadingLastWeekWaitTime: true,
+  lastUpdateTime: null,
 };

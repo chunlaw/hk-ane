@@ -88,7 +88,7 @@ const HospitalPage = () => {
                 state.calculatedLastWeekWaitTimes[idx][1]
                   ? // @ts-ignore
                     t(state.calculatedLastWeekWaitTimes[idx][1])
-                  : t("Still waiting")}
+                  : t("No data")}
               </TableCell>
             </TableRow>
           ))}
