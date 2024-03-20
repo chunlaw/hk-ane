@@ -1,20 +1,11 @@
-import { GitHub as GitHubIcon } from "@mui/icons-material";
-import { Box, IconButton, SxProps, Theme } from "@mui/material";
+import { Box, SxProps, Theme, Typography } from "@mui/material";
 
 const Footer = () => {
   return (
     <Box sx={rootSx}>
-      <IconButton
-        onClick={() => {
-          window.open(
-            "https://github.com/chunlaw/ane-hk",
-            "_blank"
-          );
-        }}
-        size="small"
-      >
-        <GitHubIcon />
-      </IconButton>
+      <Typography variant="caption">
+        Chun Law © {new Date().getFullYear()}
+      </Typography>
     </Box>
   );
 };

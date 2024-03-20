@@ -1,32 +1,29 @@
-import { Box, Container } from "@mui/material";
+import { Box, Container, SxProps, Theme } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 
 const Layout = () => {
   return (
-    <Container maxWidth={false} disableGutters>
-      <Box 
-        height="100dvh" 
-        width="90dvw"
-        display="flex" 
-        flexDirection="column" 
-        justifyContent="space-between" 
-        pt={1}
-      >
-        <Header />
-        <Box 
-          display="flex" 
-          flexDirection="column" 
-          flex={1}
-          overflow="scroll"
-        >
-          <Outlet />
-        </Box>
-        <Footer />
+    <Container fixed maxWidth="lg" disableGutters sx={rootSx}>
+      <Header />
+      <Box display="flex" flexDirection="column" flex={1} overflow="scroll">
+        <Outlet />
       </Box>
+      <Footer />
     </Container>
   );
 };
 
 export default Layout;
+
+const rootSx: SxProps<Theme> = {
+  height: "100dvh",
+  width: "100dvw",
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "space-between",
+  py: 1,
+  px: 2,
+};

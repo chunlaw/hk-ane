@@ -6,14 +6,13 @@ import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import { AppContextProvider } from "./AppContext.tsx";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import resources from "./translation"
+import resources from "./translation";
 
-i18n.use(initReactI18next)
-  .init({
-    resources,
-    lng: "zh",
-    fallbackLng: "zh",
-  })
+i18n.use(initReactI18next).init({
+  resources,
+  lng: "zh",
+  fallbackLng: "zh",
+});
 
 const theme = createTheme({});
 
@@ -25,5 +24,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <App />
       </AppContextProvider>
     </ThemeProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
