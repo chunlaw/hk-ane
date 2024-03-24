@@ -54,7 +54,7 @@ const Header = () => {
       <Box display="flex" alignItems="center" gap={1}>
         <IconButton
           onClick={() => {
-            window.open("https://github.com/chunlaw/ane-hk", "_blank");
+            window.open("https://github.com/chunlaw/hk-ane", "_blank");
           }}
           size="small"
         >

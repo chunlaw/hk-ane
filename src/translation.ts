@@ -58,6 +58,7 @@ const resources = {
       "> 13": "Over 13 hours",
       "> 14": "Over 14 hours",
       "Top wait hours for past 12 hours": "Top wait hours for past 12 hours",
+      "Head patient arrival time": "Head patient arrival time",
     },
   },
   zh: {
@@ -115,6 +116,7 @@ const resources = {
       "> 13": "超過 13 小時",
       "> 14": "超過 14 小時",
       "Top wait hours for past 12 hours": "過去 12 小時的等候時間",
+      "Head patient arrival time": "頭籌到診時間",
     },
   },
 };

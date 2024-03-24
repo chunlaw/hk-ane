@@ -1,5 +1,5 @@
-import { Box, Divider, SxProps, Theme, Typography } from "@mui/material";
-import { useCallback, useContext, useEffect } from "react";
+import { Box, Divider, List, ListItem, ListItemText, SxProps, Theme, Typography } from "@mui/material";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 import AppContext from "../../AppContext";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -60,8 +60,33 @@ const HospitalMapInfo = ({ hospital }: HospitalMapInfoProps) => {
     });
   }, [hospital, i18n.language]);
 
-  if (hospital === undefined || lastUpdateTime === null) {
-    return null;
+  const defaultContent = useMemo(() => {
+    return Object.entries(calculatedWaitTime)
+  }, [calculatedWaitTime])
+
+  if (hospital === undefined || lastUpdateTime === null ) {
+    if ( lastUpdateTime === null ) {
+      return null;
+    }
+    return (
+      <Box sx={rootSx} textAlign="left" overflow="hidden">
+        <Typography variant="h6">{t("Head patient arrival time")}</Typography>
+        <List sx={{flex: 1, overflow: "scroll"}}>
+          {defaultContent.map(([hosp, wait], idx) => (
+            <ListItem 
+              key={idx} 
+              sx={{py: 0, cursor: "pointer"}}
+              onClick={() => navigate(`/${i18n.language}/map/${hosp}`)}
+            >
+              <ListItemText
+                primary={t(wait)}
+                secondary={t(hosp)}
+              />
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+    );
   }
 
   return (
@@ -120,6 +145,8 @@ const rootSx: SxProps<Theme> = {
   bgcolor: "white",
   p: 2,
   m: 1,
+  display: "flex",
+  flexDirection: "column",
 };
 
 const linkSx: SxProps<Theme> = {

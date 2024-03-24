@@ -3,8 +3,14 @@ import { Box, SxProps, Theme, Typography } from "@mui/material";
 const Footer = () => {
   return (
     <Box sx={rootSx}>
+      <Typography variant="caption" 
+        onClick={() => window.open("https://github.com/sponsors/chunlaw", "_blank")}
+        sx={linkSx}
+      >
+        Chun Law &nbsp;
+      </Typography>
       <Typography variant="caption">
-        Chun Law © {new Date().getFullYear()}
+         @ {new Date().getFullYear()}
       </Typography>
     </Box>
   );
@@ -17,3 +23,7 @@ const rootSx: SxProps<Theme> = {
   alignItems: "center",
   justifyContent: "center",
 };
+
+const linkSx: SxProps<Theme> = {
+  cursor: "pointer",
+}

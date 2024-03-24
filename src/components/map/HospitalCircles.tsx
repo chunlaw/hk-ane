@@ -14,7 +14,11 @@ const HospitalCircles = () => {
 
   const handleClick = useCallback(
     (hospital: Hospital) => () => {
-      navigate(`/${i18n.language}/map/${encodeURI(hospital)}`);
+      if ( window.location.pathname.endsWith("map") ) {
+        navigate(`/${i18n.language}/map/${encodeURI(hospital)}`);
+      } else {
+        navigate(`/${i18n.language}/map`);
+      }
     },
     [navigate, i18n],
   );
