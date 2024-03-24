@@ -1,7 +1,9 @@
 const resources = {
   en: {
     translation: {
-      "HK A&E Waiting Time": "HK A&E Waiting Time",
+      "HK A&E Waiting Time": "A&E Waiting Time Dashboad",
+      Map: "Map",
+      List: "List",
       "Last updated time: ": "Last updated time: ",
       Hospital: "Hospital",
       Time: "Time",
@@ -12,6 +14,10 @@ const resources = {
       "Last week": "Last week",
       "Current time yesterday": "Current time yesterday",
       "Current time last week": "Current time last week",
+      "Yesterday real waiting time reference":
+        "Yesterday real waiting time reference",
+      "Last week real waiting time reference":
+        "Last week real waiting time reference",
       "Alice Ho Miu Ling Nethersole Hospital":
         "Alice Ho Miu Ling Nethersole Hospital",
       "Caritas Medical Centre": "Caritas Medical Centre",
@@ -34,6 +40,8 @@ const resources = {
       "Yan Chai Hospital": "Yan Chai Hospital",
       "No data": "N/A",
       "Still waiting": "Still waiting",
+      hour: "hour",
+      hours: "hours",
       "< 1": "Around 1 hour",
       "> 1": "Over 1 hour",
       "> 2": "Over 2 hours",
@@ -54,7 +62,9 @@ const resources = {
   },
   zh: {
     translation: {
-      "HK A&E Waiting Time": "香港急症室等候時間",
+      "HK A&E Waiting Time": "急症等候時間表",
+      Map: "地圖",
+      List: "列表",
       "Last updated time: ": "最後更新時間：",
       Hospital: "醫院",
       Time: "時間",
@@ -65,6 +75,8 @@ const resources = {
       "Last week": "上星期",
       "Current time yesterday": "昨天現在時間",
       "Current time last week": "上星期現在時間",
+      "Yesterday real waiting time reference": "昨天等候時間參考",
+      "Last week real waiting time reference": "上周等候時間參考",
       "Alice Ho Miu Ling Nethersole Hospital": "雅麗氏何妙齡那打素醫院",
       "Caritas Medical Centre": "明愛醫院",
       "Kwong Wah Hospital": "廣華醫院",
@@ -85,6 +97,8 @@ const resources = {
       "Yan Chai Hospital": "仁濟醫院",
       "No data": "沒有資料",
       "Still waiting": "等候中",
+      hour: "小時",
+      hours: "小時",
       "< 1": "大約 1 小時",
       "> 1": "超過 1 小時",
       "> 2": "超過 2 小時",

@@ -6,113 +6,57 @@ import {
   TableCell,
   TableBody,
   TableRow,
-  CircularProgress,
 } from "@mui/material";
 import { AVAILABLE_HOSPITALS, Hospital } from "ane-hk";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import AppContext from "../AppContext";
 import { useNavigate } from "react-router-dom";
 import { WaitMsg } from "ane-hk/dist/types";
 import { format } from "date-fns";
+import { HOSPITAL_ADDRESS } from "../constants";
+import { setSeoHeader } from "../utils";
 
 interface WaitListPageState {
   calculatedWaitTime: Record<string, string>;
   calculatedYesterdayWaitTime: Record<string, WaitMsg | undefined>;
   calculatedLastWeekWaitTime: Record<string, WaitMsg | undefined>;
-  isLoadingWaitTime: boolean;
-  isLoadingYesterdayWaitTime: boolean;
-  isLoadingLastWeekWaitTime: boolean;
   lastUpdateTime: Date | null;
 }
 
 const WaitListPage = () => {
   const [state, setState] = useState<WaitListPageState>(DEFAULT_STATE);
-  const { getCalculatedWaitTime } = useContext(AppContext);
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const crawl = useCallback(async () => {
-    const today = new Date();
-    const yesterday = new Date();
-    const lastWeek = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    lastWeek.setDate(lastWeek.getDate() - 7);
-    await Promise.all(
-      AVAILABLE_HOSPITALS.en.map((hosp) =>
-        getCalculatedWaitTime(today, hosp as Hospital).then((tr) => ({
-          hosp,
-          res: format(
-            new Date(tr.filter(([_, v]) => v !== undefined)[0][0]),
-            "hh:mm a",
-          ),
-        })),
-      ),
-    ).then((res) => {
-      setState((prev) => ({
-        ...prev,
-        calculatedWaitTime: res.reduce(
-          (acc, { hosp, res }) => {
-            acc[hosp] = res;
-            return acc;
-          },
-          {} as WaitListPageState["calculatedWaitTime"],
-        ),
-        lastUpdateTime: new Date(res[0].res[0][0][0]),
-        isLoadingWaitTime: false,
-      }));
-    });
-
-    await Promise.all(
-      AVAILABLE_HOSPITALS.en.map((hosp) =>
-        getCalculatedWaitTime(yesterday, hosp as Hospital).then((yr) => ({
-          hosp,
-          res: yr[0][1],
-        })),
-      ),
-    ).then((res) => {
-      setState((prev) => ({
-        ...prev,
-        calculatedYesterdayWaitTime: res.reduce(
-          (acc, { hosp, res }) => {
-            acc[hosp] = res;
-            return acc;
-          },
-          {} as WaitListPageState["calculatedYesterdayWaitTime"],
-        ),
-        isLoadingYesterdayWaitTime: false,
-      }));
-    });
-
-    await Promise.all(
-      AVAILABLE_HOSPITALS.en.map((hosp) =>
-        getCalculatedWaitTime(lastWeek, hosp as Hospital).then((yr) => ({
-          hosp,
-          res: yr[0][1],
-        })),
-      ),
-    ).then((res) => {
-      setState((prev) => ({
-        ...prev,
-        calculatedLastWeekWaitTime: res.reduce(
-          (acc, { hosp, res }) => {
-            acc[hosp] = res;
-            return acc;
-          },
-          {} as WaitListPageState["calculatedLastWeekWaitTime"],
-        ),
-        isLoadingLastWeekWaitTime: false,
-      }));
-    });
+    fetch("https://raw.githubusercontent.com/chunlaw/ane-hk/cache/cache.json")
+      .then((r) => r.json())
+      .then(setState);
   }, []);
 
   useEffect(() => {
     const timer = setInterval(crawl, 300000);
     crawl();
+
+    setSeoHeader(
+      i18n.language === "zh"
+        ? {
+            title: "急症等候時間表",
+            description: "即時公立醫院急症等候時間表 - 輔以歷史數據作參考",
+            lang: i18n.language,
+          }
+        : {
+            title: "A&E Waiting Time Dashboad",
+            description:
+              "Real time A&E waiting time dashboard, with historical data for reference",
+            lang: i18n.language,
+          },
+    );
+
     return () => {
       clearInterval(timer);
     };
-  }, [crawl]);
+  }, [crawl, i18n.language]);
 
   const handleClick = useCallback(
     (hospital: Hospital) => () => {
@@ -129,17 +73,19 @@ const WaitListPage = () => {
       flexDirection="column"
       alignItems="flex-end"
     >
-      {state.lastUpdateTime && (
-        <Typography variant="caption">
-          {t("Last updated time: ")} {format(state.lastUpdateTime, "hh:mm a")}
-        </Typography>
-      )}
       <Table>
-        <TableHead>
+        <TableHead sx={{ position: "sticky", top: 0, bgcolor: "white" }}>
           <TableRow>
             <TableCell rowSpan={2}>{t("Hospital")}</TableCell>
             <TableCell rowSpan={2}>
               {t("Arrival time of the current head")}
+              <br />
+              {state.lastUpdateTime && (
+                <Typography variant="caption">
+                  {t("Last updated time: ")}{" "}
+                  {format(state.lastUpdateTime, "hh:mm a")}
+                </Typography>
+              )}
             </TableCell>
             <TableCell colSpan={2} sx={{ textAlign: "center" }}>
               {t("Real waiting time")}
@@ -158,29 +104,18 @@ const WaitListPage = () => {
                   onClick={handleClick(hospName as Hospital)}
                   sx={{ cursor: "pointer" }}
                 >
-                  {t(hospName)}
+                  <Typography variant="body1">{t(hospName)}</Typography>
+                  <Typography variant="caption">
+                    {t(HOSPITAL_ADDRESS[hospName][i18n.language])}
+                  </Typography>
                 </Box>
               </TableCell>
+              <TableCell>{state.calculatedWaitTime[hospName]}</TableCell>
               <TableCell>
-                {state.isLoadingWaitTime ? (
-                  <CircularProgress size="12px" />
-                ) : (
-                  state.calculatedWaitTime[hospName]
-                )}
+                {t(state.calculatedYesterdayWaitTime[hospName] ?? "No data")}
               </TableCell>
               <TableCell>
-                {state.isLoadingYesterdayWaitTime ? (
-                  <CircularProgress size="12px" />
-                ) : (
-                  t(state.calculatedYesterdayWaitTime[hospName] ?? "No data")
-                )}
-              </TableCell>
-              <TableCell>
-                {state.isLoadingLastWeekWaitTime ? (
-                  <CircularProgress size="12px" />
-                ) : (
-                  t(state.calculatedLastWeekWaitTime[hospName] ?? "No data")
-                )}
+                {t(state.calculatedLastWeekWaitTime[hospName] ?? "No data")}
               </TableCell>
             </TableRow>
           ))}
@@ -196,8 +131,5 @@ const DEFAULT_STATE: WaitListPageState = {
   calculatedWaitTime: {},
   calculatedYesterdayWaitTime: {},
   calculatedLastWeekWaitTime: {},
-  isLoadingWaitTime: true,
-  isLoadingYesterdayWaitTime: true,
-  isLoadingLastWeekWaitTime: true,
   lastUpdateTime: null,
 };

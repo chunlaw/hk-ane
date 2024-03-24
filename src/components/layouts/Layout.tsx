@@ -5,7 +5,7 @@ import Footer from "./Footer";
 
 const Layout = () => {
   return (
-    <Container fixed maxWidth="lg" disableGutters sx={rootSx}>
+    <Container fixed maxWidth="xl" disableGutters sx={rootSx}>
       <Header />
       <Box display="flex" flexDirection="column" flex={1} overflow="scroll">
         <Outlet />
